@@ -2,3 +2,6 @@ gem5
 gem5.opt
 blocked-matmul-output
 output
+gem5
+m5out/
+m5out/stats.txt

@@ -27,7 +27,7 @@ command-line parameters will be available create_cpu() via the options variable.
 """
 
 # This needs to point to an installation of gem5 to use configs/common files
-GEM5_DIR = '../gem5'
+GEM5_DIR = 'gem5'
 
 # Generic python libraries
 import optparse
@@ -42,6 +42,7 @@ from m5.objects import *
 from m5.util import addToPath, fatal
 
 addToPath(os.path.join(GEM5_DIR, 'configs/common'))
+addToPath(os.path.join(GEM5_DIR, 'configs'))
 
 # Utilities included with m5 for configuring common simulations
 # from gem5/configs/common
@@ -122,7 +123,7 @@ specifying the executable to run and --options specifying
 the command line arguments it will receive via argv.
 """
 def create_process(options):
-    process = LiveProcess()
+    process = Process()
     # use realpath to change something like ./naive-matmul into
     # something like /if22/cr4bd/naive-matmul
     process.executable = os.path.realpath(options.cmd)
@@ -291,7 +292,7 @@ def get_options():
     # If you are failing an assertion here, removing the assertion will not make the option work.
     assert(not options.smt)
     assert(options.num_cpus == 1)
-    assert(not options.fastmem)
+    #assert(not options.fastmem)
     assert(not options.standard_switch)
     assert(not options.repeat_switch)
     assert(not options.take_checkpoints)
@@ -300,7 +301,7 @@ def get_options():
     assert(not options.l2cache)
 
     if args:
-        print "Error: script doesn't take any positional arguments"
+        print ("Error: script doesn't take any positional arguments")
         sys.exit(1)
 
     return options
