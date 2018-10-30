@@ -12,7 +12,7 @@ gem5script.py.
 ## Configuration
 
 ```bash
-ln -s <gem5_installlation_folder> gem5
+ln -s <gem5_installlation_folder>/configs configs
    ln -s <gem5_installation_folder>/build/X86/gem5.opt ./
 ```
 

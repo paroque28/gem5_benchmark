@@ -26,9 +26,6 @@ command-line parameters will be available create_cpu() via the options variable.
 
 """
 
-# This needs to point to an installation of gem5 to use configs/common files
-GEM5_DIR = 'gem5'
-
 # Generic python libraries
 import optparse
 import os
@@ -41,8 +38,8 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath(os.path.join(GEM5_DIR, 'configs/common'))
-addToPath(os.path.join(GEM5_DIR, 'configs'))
+addToPath(os.path.join('configs/common'))
+addToPath(os.path.join('configs'))
 
 # Utilities included with m5 for configuring common simulations
 # from gem5/configs/common

@@ -3,5 +3,8 @@ gem5.opt
 blocked-matmul-output
 output
 gem5
+configs
 m5out/
 m5out/stats.txt
+sync.ffs_db
+
