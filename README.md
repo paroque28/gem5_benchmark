@@ -21,8 +21,13 @@ ln -s <gem5_installlation_folder> gem5
 ./gem5.opt gem5script.py --cmd=./blocked-matmul --directory=output
 ```
 
-The included benchmark is described bellow:
+The included benchmarks are described bellow:
 
 *  blocked-matmul --- does a 84x84 register-blocked matrix multiply.
    Source is in blocked-matmul.c.
+
+*  queens --- solves the N queens problem. Source and license is in
+   queens.c. I obtained this from the LLVM's
+   [test-suite repository](https://github.com/llvm-mirror/test-suite),
+   and the program was authored by Roberto Sierra.
 
