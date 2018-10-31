@@ -104,10 +104,11 @@ def create_cpu(options, cpu_id):
     the_cpu = DerivO3CPU(cpu_id=cpu_id)
     icache = L1_ICache(size=options.l1i_size, assoc=options.l1i_assoc)
     dcache = L1_DCache(size=options.l1d_size, assoc=options.l1d_assoc)
-    
-    # ****************************
-    # YOUR CUSTOMIZATION CODE HERE
-    # ****************************
+    if options.directory:
+        if (options.branch_predictor == "tournament"):
+            the_cpu.branchPred = TournamentBP()
+        elif (options.branch_predictor == "bi"):
+            the_cpu.branchPred =  BiModeBP()
 
     the_cpu[cpu_id].addPrivateSplitL1Caches(icache, dcache, None, None)
     the_cpu[cpu_id].createInterruptController()
@@ -258,6 +259,7 @@ def get_options():
     #
     # This takes precedence over gem5's built-in outdir option
     parser.add_option("--directory", type="str", default=None)
+    parser.add_option("--branch_predictor", type="str", default=None)
 
     parser.set_defaults(
         # Default to writing to program.out in the current working directory
@@ -273,7 +275,6 @@ def get_options():
     (options, args) = parser.parse_args()
 
     # Always enable caches, DerivO3CPU will not work without it.
-
     if not options.directory:
         eprint("You must set --directory to the name of an output directory to create")
         sys.exit(1)
