@@ -24,6 +24,15 @@ void random_matrix(myfloat *A, int I, int J) {
     }
 }
 
+void print_matrix(myfloat *A, int I, int J) {
+    for (int i = 0; i < I; ++i) {
+        for (int j = 0; j < J; ++j) {
+            fprintf(stdout,"%f ", A[i * J + j]);
+        }
+        printf("\n"); 
+    }
+}
+
 /* computes matrix multiply C += A * B
  * A is I by K, B is K by J, C is I by J 
  */
@@ -87,21 +96,42 @@ uint64_t read_tsc(void) {
 #endif
 }
 
-#define SIZE 84
+#define MAX_SIZE 110
 
-static myfloat A[SIZE * SIZE];
-static myfloat B[SIZE * SIZE];
-static myfloat C[SIZE * SIZE];
+static myfloat A[MAX_SIZE * MAX_SIZE];
+static myfloat B[MAX_SIZE * MAX_SIZE];
+static myfloat C[MAX_SIZE * MAX_SIZE];
 
-int main(void) {
+//A is I by K, B is K by J, C is I by J 
+int main(int argc, char* argv[]) {
     srand48(1); // fixed seed for reproducible results
-    random_matrix(A, SIZE, SIZE);
-    random_matrix(B, SIZE, SIZE);
-    random_matrix(C, SIZE, SIZE);
+    if (argc != 4){
+        fprintf(stderr, "%s\n", "Wrong use of command!");
+        fprintf(stdout, "%s %s %s\n", "Help: ", argv[0] , "I J K");
+        fprintf(stdout, "%s %s %s\n", "Example: ", argv[0] , "10 20 30");
+        printf("Blocked matmul computes matrix multiply C += A * B\n");
+        printf("A is I by K, B is K by J, C is I by J\n");
+        printf("Where I J and K are divisible by two\n");
+        return 1;
+    }
+    int I  = atoi(argv[1]);
+    int J  = atoi(argv[2]);
+    int K  = atoi(argv[3]);
+    random_matrix(A, I, K);
+    random_matrix(B, K, J);
+    random_matrix(C, I, J);
+    // printf("A:\n");
+    // print_matrix(A, I, K);
+    // printf("B:\n");
+    // print_matrix(B, K, J);
+    // printf("C:\n");
+    // print_matrix(C, I, J);
     for (int i = 0; i < 4; ++i) {
         long start = read_tsc();
-        blocked_matmul(A, B, C, SIZE, SIZE, SIZE);
+        blocked_matmul(A, B, C, I, J, K);
         long end = read_tsc();
         printf("Iteration %d: %ld cycles\n", i, end - start);
     }
+    // printf("Result:\n");
+    // print_matrix(C, I, J);
 }

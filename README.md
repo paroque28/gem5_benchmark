@@ -13,12 +13,13 @@ gem5script.py.
 
 ```bash
 ln -s <gem5_installlation_folder>/configs configs
-   ln -s <gem5_installation_folder>/build/X86/gem5.opt ./
+ln -s <gem5_installation_folder>/build/X86/gem5.opt ./
 ```
 
 ## Usage
 ```bash
-./gem5.opt gem5script.py --cmd=./blocked-matmul --directory=output
+./gem5.opt gem5script.py --cmd=./blocked-matmul --directory=output --options='4 6 6'
+./gem5.opt gem5script.py --cmd=./queens --directory=queens-default-output --options='-c 10'
 ```
 
 The included benchmarks are described bellow:

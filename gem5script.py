@@ -31,7 +31,8 @@ import optparse
 import os
 import os.path
 import sys
-
+import datetime
+import json
 # Interface to m5 simulation, implementing in gem5/src
 import m5
 from m5.defines import buildEnv
@@ -58,7 +59,8 @@ Main function. This is called once at the very bottom of the script.
 """
 def main(options):
     process = create_process(options)
-    run_one_simulation(options, process)
+    if not options.test:
+        run_one_simulation(options, process)
 
 
 """
@@ -105,7 +107,7 @@ def create_cpu(options, cpu_id):
     icache = L1_ICache(size=options.l1i_size, assoc=options.l1i_assoc)
     dcache = L1_DCache(size=options.l1d_size, assoc=options.l1d_assoc)
     if options.branch_predictor:
-        if (options.branch_predictor == "tournament"):
+        if (options.branch_predictor == "tourn"):
             the_cpu.branchPred = TournamentBP()
         elif (options.branch_predictor == "bi"):
             the_cpu.branchPred =  BiModeBP()
@@ -148,7 +150,9 @@ Based on options, fork a child process and run one simulation in it.
 Uses the create_cpu function above.
 """
 def run_one_simulation(options, process):
-    the_dir = os.path.join(options.directory)
+    the_dir = os.path.join(options.directory + "/b" 
+                        + options.branch_predictor+ "_l1d" + options.l1d_size + "_" +
+                        datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm%Ss") )
     if not os.path.exists(the_dir):
         os.makedirs(the_dir)
     pid = os.fork()
@@ -250,7 +254,14 @@ def run_system_with_cpu(
         exit_event = m5.simulate(max_tick)
     eprint("Done simulation @ tick = %s: %s" % (m5.curTick(), exit_event.getCause()))
     m5.stats.dump()
-
+    print(m5.stats.stats_dict[u'system.cpu.icache.ReadExResp_mshr_miss_latency'])
+def create_tests():
+    tests = {}
+    tests["Cache_size"] = {"start": 16, "end": 512, "divs": 8 } #Kb
+    tests["Predictor"] = {"list": ["local", "tourn", "bi"] }
+    tests["Matrix_size"] = {"list": [{"I": 4, "J": 4 ,"K": 4}, {"I": 6, "J": 6 ,"K": 6}]}
+    tests["done"] = []
+    return tests
 """Retrieve command-line options"""
 def get_options():
     parser = optparse.OptionParser()
@@ -261,7 +272,8 @@ def get_options():
     #
     # This takes precedence over gem5's built-in outdir option
     parser.add_option("--directory", type="str", default=None)
-    parser.add_option("--branch_predictor", type="str", default=None)
+    parser.add_option("--branch_predictor", type="str", default="local")
+    parser.add_option("--test", type="str", default=None)  # options single vs all
 
     parser.set_defaults(
         # Default to writing to program.out in the current working directory
@@ -280,16 +292,15 @@ def get_options():
     if not options.directory:
         eprint("You must set --directory to the name of an output directory to create")
         sys.exit(1)
+    if options.test:
+        if not os.path.exists(options.test):
+            tests = create_tests()
+            with open(options.test, 'w') as outfile:  
+                json.dump(tests, outfile)
+        else:
+            with open(options.test) as json_file:  
+                tests = json.load(json_file)
 
-    if os.path.exists(options.directory):
-        eprint("Output directory %s already exists -- refusing to overwrite" % (options.directory))
-        sys.exit(1)
-
-    # Some features are not supported by this script, but are added to parser by
-    # Options.addSEOptions and Options.addCommonOptions
-
-    # I check for these here to avoid confusion
-    # If you are failing an assertion here, removing the assertion will not make the option work.
     assert(not options.smt)
     assert(options.num_cpus == 1)
     #assert(not options.fastmem)
