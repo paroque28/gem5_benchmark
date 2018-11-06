@@ -57,10 +57,35 @@ def eprint(*args):
 """
 Main function. This is called once at the very bottom of the script.
 """
-def main(options):
-    process = create_process(options)
+def main(options): 
     if not options.test:
+        print(options.l1d_size)
+        process = create_process(options)
         run_one_simulation(options, process)
+    else:
+        run_all_simulations(options)
+
+
+def run_all_simulations(options):
+    with open(options.test) as json_file:
+        tests = json.load(json_file)
+    for c in tests["Cache_size"]:
+        for p in tests["Predictor"]:
+            for  m in tests["Matrix_size"]:
+                UUID = "l1d:" + str(c)+ " BP:" + p + " M:" +str(m["I"]) + "," + str(m["J"]) + "," + str(m["K"])
+                if not (UUID) in tests["done"]: 
+                    options.l1d_size = str(c) +"kB"
+                    options.branch_predictor = p
+                    options.options = ""+ str(m["I"]) + " " + str(m["J"]) + " " + str(m["K"])
+                    process = create_process(options)
+                    run_one_simulation(options, process)
+                    tests["done"].append(UUID)
+                    print(UUID,  "  done!")
+                    with open(options.test, 'w') as outfile:  
+                        json.dump(tests, outfile) 
+                else:
+                    print(UUID,  "  exists!")
+                
 
 
 """
@@ -257,9 +282,9 @@ def run_system_with_cpu(
     print(m5.stats.stats_dict[u'system.cpu.icache.ReadExResp_mshr_miss_latency'])
 def create_tests():
     tests = {}
-    tests["Cache_size"] = {"start": 16, "end": 512, "divs": 8 } #Kb
-    tests["Predictor"] = {"list": ["local", "tourn", "bi"] }
-    tests["Matrix_size"] = {"list": [{"I": 4, "J": 4 ,"K": 4}, {"I": 6, "J": 6 ,"K": 6}]}
+    tests["Cache_size"] = [16, 24, 32, 48]#, 64, 128, 256, 512] #Kb
+    tests["Predictor"] = ["local", "tourn"]#, "bi"]
+    tests["Matrix_size"] = [{"I": 4, "J": 4 ,"K": 4}, {"I": 6, "J": 6 ,"K": 6}]
     tests["done"] = []
     return tests
 """Retrieve command-line options"""
