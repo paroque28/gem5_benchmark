@@ -104,11 +104,13 @@ def create_cpu(options, cpu_id):
     the_cpu = DerivO3CPU(cpu_id=cpu_id)
     icache = L1_ICache(size=options.l1i_size, assoc=options.l1i_assoc)
     dcache = L1_DCache(size=options.l1d_size, assoc=options.l1d_assoc)
-    if options.directory:
+    if options.branch_predictor:
         if (options.branch_predictor == "tournament"):
             the_cpu.branchPred = TournamentBP()
         elif (options.branch_predictor == "bi"):
             the_cpu.branchPred =  BiModeBP()
+        elif (options.branch_predictor == "local"):
+            the_cpu.branchPred =  LocalBP()
 
     the_cpu[cpu_id].addPrivateSplitL1Caches(icache, dcache, None, None)
     the_cpu[cpu_id].createInterruptController()
