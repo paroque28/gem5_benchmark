@@ -72,7 +72,7 @@ def main():
     for data in dataset:
         print(data)
 
-    plotIPC(dataset, 'TournamentBP', 4, 4, 4)
+    plotIPC(dataset, 'TournamentBP', 4, 4, 4) # tiene que existir el los folder
 
 
 main()
