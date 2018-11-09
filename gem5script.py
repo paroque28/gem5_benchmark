@@ -1,9 +1,8 @@
 """
-
 This script executes a program with gem5's system call emulation mode.
 
 Basic usage:
-    path/to/gem5.opt ./this-script.py --cmd=./path/to/executable 
+    path/to/gem5.opt ./gem5script.py --cmd=./path/to/executable 
             --directory=output-directory
 
 After running the above command, output from the simulation will be placed in
@@ -16,14 +15,6 @@ output-directory including these files:
     stats.txt --- statistics from the simulation, such as the number of instructions
                   executed, the cache hit ratios, etc., etc.
 
-To customize the simulation, you can edit the create_cpu() function below to 
-change the configurations of its CPUs. This function takes as input the index
-of the simulation, so you can easily sweep across parameters.
-
-If you'd like to add command-line parameters to this script, you can do so by editing
-the get_options() command to add another call to parser.add_option(). The parsed
-command-line parameters will be available create_cpu() via the options variable.
-
 """
 
 # Generic python libraries
@@ -33,6 +24,7 @@ import os.path
 import sys
 import datetime
 import json
+import shutil
 # Interface to m5 simulation, implementing in gem5/src
 import m5
 from m5.defines import buildEnv
@@ -49,9 +41,9 @@ import Simulation
 from Caches import *
 import MemConfig
 
-def eprint(*args):
-    sys.stderr.write("".join(args))
-    sys.stderr.write("\n")
+## local functions
+from options  import *
+from utils import eprint
 
 
 """
@@ -59,7 +51,6 @@ Main function. This is called once at the very bottom of the script.
 """
 def main(options): 
     if not options.test:
-        print(options.l1d_size)
         process = create_process(options)
         run_one_simulation(options, process)
     else:
@@ -78,11 +69,15 @@ def run_all_simulations(options):
                     options.branch_predictor = p
                     options.options = ""+ str(m["I"]) + " " + str(m["J"]) + " " + str(m["K"])
                     process = create_process(options)
-                    run_one_simulation(options, process)
-                    tests["done"].append(UUID)
-                    print(UUID,  "  done!")
-                    with open(options.test, 'w') as outfile:  
-                        json.dump(tests, outfile) 
+                    res = run_one_simulation(options, process)
+                    if res == 0:
+                        tests["done"].append(UUID)
+                        print(UUID,  "  done!")
+                        with open(options.test, 'w') as outfile:  
+                            json.dump(tests, outfile) 
+                    else:
+                        print("Error Exiting now!!")
+                        sys.exit(1)
                 else:
                     print(UUID,  "  exists!")
                 
@@ -191,6 +186,7 @@ def run_one_simulation(options, process):
     else:
         # in parent
         exited_pid, exit_status = os.waitpid(pid, 0)
+        print(exited_pid, exit_status)
         # Check whether child reached exit(0)
         if os.WIFEXITED(exit_status) and os.WEXITSTATUS(exit_status) != 0:
             eprint("Child did not exit normally")
@@ -274,73 +270,13 @@ def run_system_with_cpu(
     if warmup_cpu_class:
         max_tick -= m5.curTick()
         m5.stats.reset()
-        debug_print("Finished warmup; running real simulation")
+        # debug_print("Finished warmup; running real simulation")
         m5.switchCpus(system, real_cpus)
         exit_event = m5.simulate(max_tick)
-    eprint("Done simulation @ tick = %s: %s" % (m5.curTick(), exit_event.getCause()))
+    eprint("Done simulation @ tick = %s: %s  with exit code %d." % (m5.curTick(), exit_event.getCause(), exit_event.getCode()))
+    if (exit_event.getCode() != 0):
+        shutil.rmtree(m5.options.outdir)
+        sys.exit(1)
     m5.stats.dump()
-    print(m5.stats.stats_dict[u'system.cpu.icache.ReadExResp_mshr_miss_latency'])
-def create_tests():
-    tests = {}
-    tests["Cache_size"] = [16, 24, 32, 48]#, 64, 128, 256, 512] #Kb
-    tests["Predictor"] = ["local", "tourn"]#, "bi"]
-    tests["Matrix_size"] = [{"I": 4, "J": 4 ,"K": 4}, {"I": 6, "J": 6 ,"K": 6}]
-    tests["done"] = []
-    return tests
-"""Retrieve command-line options"""
-def get_options():
-    parser = optparse.OptionParser()
-    Options.addCommonOptions(parser)
-    Options.addSEOptions(parser)
 
-    # base output directory to use.
-    #
-    # This takes precedence over gem5's built-in outdir option
-    parser.add_option("--directory", type="str", default=None)
-    parser.add_option("--branch_predictor", type="str", default="local")
-    parser.add_option("--test", type="str", default=None)  # options single vs all
-
-    parser.set_defaults(
-        # Default to writing to program.out in the current working directory
-        # below, we cd to the simulation output directory
-        output='./program.out',
-        errout='./program.err',
-
-        mem_size=64 * 1024 * 1024,
-
-        caches = True
-    )
-
-    (options, args) = parser.parse_args()
-
-    # Always enable caches, DerivO3CPU will not work without it.
-    if not options.directory:
-        eprint("You must set --directory to the name of an output directory to create")
-        sys.exit(1)
-    if options.test:
-        if not os.path.exists(options.test):
-            tests = create_tests()
-            with open(options.test, 'w') as outfile:  
-                json.dump(tests, outfile)
-        else:
-            with open(options.test) as json_file:  
-                tests = json.load(json_file)
-
-    assert(not options.smt)
-    assert(options.num_cpus == 1)
-    #assert(not options.fastmem)
-    assert(not options.standard_switch)
-    assert(not options.repeat_switch)
-    assert(not options.take_checkpoints)
-    assert(not options.fast_forward)
-    assert(not options.maxinsts)
-    assert(not options.l2cache)
-
-    if args:
-        print ("Error: script doesn't take any positional arguments")
-        sys.exit(1)
-
-    return options
-
-
-main(get_options())
+main(get_options(Options))

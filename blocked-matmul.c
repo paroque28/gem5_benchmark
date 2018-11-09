@@ -117,6 +117,10 @@ int main(int argc, char* argv[]) {
     int I  = atoi(argv[1]);
     int J  = atoi(argv[2]);
     int K  = atoi(argv[3]);
+    if((I % 2) != 0  || (J % 2) != 0  || (K % 2) != 0){
+         printf("Matrix size should be \% 2 \n");
+         return 1;
+    }
     random_matrix(A, I, K);
     random_matrix(B, K, J);
     random_matrix(C, I, J);
