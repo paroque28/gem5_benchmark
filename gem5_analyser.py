@@ -26,29 +26,37 @@ def getTest(folder):
     cmd=config['system.cpu.workload']['cmd']
     matrix_size = cmd.split(" ")
 
-    stats = []
+    stats = {}
     filestat=open(folder + "/stats.txt","r")
     for line in filestat.readlines():
         line = re.split(' +', line) # cualquier cantidad de espacios
         if line[0] in allowed_stats:
-            stats.append({line[0]:line[1]})
+            stats[line[0]] = line[1]
 
 
     return {'BP': config['system.cpu.branchPred']['type'],
          'CacheSize': config['system.cpu.dcache.tags']['size'],
-         "M_I":matrix_size[1], "M_J":matrix_size[2], "M_K":matrix_size[3],
+         "M_I":int(matrix_size[1]), "M_J":int(matrix_size[2]), "M_K":int(matrix_size[3]),
          'stats': stats}
 
-def plotIPC(dataset):
+def plotIPC(dataset, BP, I, J, K):
     # Data for plotting
-    t = np.arange(0.0, 2.0, 0.01)
-    s = 1 + np.sin(2 * np.pi * t)
+    x = []
+    y = []
+    for data in dataset:
+        if (data['BP'] == BP and data['M_I'] == I and data['M_J'] == J and data['M_K'] == K):
+            x.append(int(data['CacheSize']))
+            y.append(float(data['stats']['system.cpu.ipc']))
+
+
+    x = np.array(x)
+    y = np.array(y)
 
     fig, ax = plt.subplots()
-    ax.plot(t, s)
+    ax.plot(x, y)
 
     ax.set(xlabel='Cache Size (Kb)', ylabel='IPC',
-        title='Comparacion IPC con tamanno cache')
+        title=("Comparacion IPC con tamanno cache matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+" "+ BP))
     ax.grid()
 
     fig.savefig("IPC.png")
@@ -64,7 +72,7 @@ def main():
     for data in dataset:
         print(data)
 
-    plotIPC(dataset)
+    plotIPC(dataset, 'TournamentBP', 4, 4, 4)
 
 
 main()
