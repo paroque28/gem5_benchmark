@@ -63,9 +63,12 @@ def run_all_simulations(options):
     # keep track of tests that were ran
     with open(options.test) as json_file:
         tests = json.load(json_file)
+    total_tests = len(tests["Cache_size"]) * len(tests["Predictor"]) * len(tests["Matrix_size"])
+    current  = 0
     for c in tests["Cache_size"]:
         for p in tests["Predictor"]:
             for  m in tests["Matrix_size"]:
+                current += 1
                 UUID = "l1d:" + str(c)+ " BP:" + p + " M:" +str(m["I"]) + "," + str(m["J"]) + "," + str(m["K"])
                 if not (UUID) in tests["done"]: 
                     options.l1d_size = str(c) +"kB"
@@ -73,16 +76,13 @@ def run_all_simulations(options):
                     options.options = ""+ str(m["I"]) + " " + str(m["J"]) + " " + str(m["K"])
                     process = create_process(options)
                     res = run_one_simulation(options, process)
-                    if res == 0:
-                        tests["done"].append(UUID)
-                        print(UUID,  "  done!")
-                        with open(options.test, 'w') as outfile:  
-                            json.dump(tests, outfile) 
-                    else:
-                        print("Error Exiting now!!")
-                        sys.exit(1)
+                    tests["done"].append(UUID)
+                    print(UUID,  "  done!")
+                    with open(options.test, 'w') as outfile:  
+                        json.dump(tests, outfile) 
                 else:
                     print(UUID,  "  exists!")
+                print("######### TEST ", current, " of ", total_tests, " ###############" )
                 
 
 
@@ -141,8 +141,8 @@ Based on options, fork a child process and run one simulation in it.
 Uses the create_cpu function above.
 """
 def run_one_simulation(options, process):
-    the_dir = os.path.join(options.directory + "/br-" 
-                        + options.branch_predictor+ "_l1d-" + options.l1d_size + "_M-" + options.options.replace(" ", ",") + "_" +
+    the_dir = os.path.join(options.directory + "/l1d-" 
+                        + options.l1d_size+ "_BP-" + options.branch_predictor + "_M-" + options.options.replace(" ", ",") + "_" +
                         datetime.datetime.now().strftime("%m-%d-%Hh%Mm%Ss") )
     if not os.path.exists(the_dir):
         os.makedirs(the_dir)
@@ -160,6 +160,7 @@ def run_one_simulation(options, process):
         # Check whether child reached exit(0)
         if os.WIFEXITED(exit_status) and os.WEXITSTATUS(exit_status) != 0:
             eprint("Child did not exit normally")
+            sys.exit(1)
 
 """
 Setup a simulation to run the specified program, writing output to the specified output directory.
@@ -242,6 +243,7 @@ def run_system_with_cpu(
         m5.switchCpus(system, real_cpus)
         exit_event = m5.simulate(max_tick)
     eprint("Done simulation @ tick = %s: %s  with exit code %d." % (m5.curTick(), exit_event.getCause(), exit_event.getCode()))
+    print("#####Finished %s %s", options.cmd, options.options)
     if (exit_event.getCode() != 0):
         shutil.rmtree(m5.options.outdir)
         sys.exit(1)
