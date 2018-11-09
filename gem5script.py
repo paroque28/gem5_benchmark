@@ -56,8 +56,11 @@ def main(options):
     else:
         run_all_simulations(options)
 
-
+"""
+Create multiple forks for all the tests
+"""
 def run_all_simulations(options):
+    # keep track of tests that were ran
     with open(options.test) as json_file:
         tests = json.load(json_file)
     for c in tests["Cache_size"]:
@@ -88,38 +91,6 @@ Create a virtual CPU for the simulation.
 
 To see the list of parameters you can set on the CPU, look in
 gem5/src/cpu/o3/O3CPU.py.
-
-To set which functional units (i.e. pipelines for execution) the processor
-has, see the 'fuPool' parameter to the CPU. You can see the definition of 
-DefaultFUPool, the default setting for this parameter, in src/cpu/o3/FUPool.py.
-This uses definitions of the available functional units shown in
-src/cpu/o3/FuncUnitConfig.py.
-
-You can define new one using something like:
-    class MyFP_ALU(FP_ALU): # inherit settings fom FP_ALU
-        count = 8
-    class MyFP_MultDiv(FP_MultDiv): # inherit settings from FP_multDiv
-        count = 8
-    class MyFunctionalUnits(FUPool):
-        FUList = [
-            IntALU(), IntMultDiv(), MyFP_ALU(), MyFP_MultDiv(),
-            SIMD_Unit(), RdWrPort(), IprPort(),
-        ]
-
-    the_cpu.fuPool = MyFunctionalUnits()
-
-Note that it is permissible to have multiple copies of a functional
-unit in the pool.
-
-For options for the branch predictor, see src/cpu/pred/BranchPredictor.py.
-You can set the branch predictor using something like:
-    
-    my_predictor = LocalBP()
-    my_predictor.localPredictorSize = 128
-    the_cpu.branchPred = my_predictor
-
-To set options for the caches, see configs/common/Caches.py for
-the default settings, and src/mem/cache/Cache.py
 """
 def create_cpu(options, cpu_id):
     # DerivO3CPU is the configurable out-of-order CPU model supplied by gem5
@@ -170,9 +141,9 @@ Based on options, fork a child process and run one simulation in it.
 Uses the create_cpu function above.
 """
 def run_one_simulation(options, process):
-    the_dir = os.path.join(options.directory + "/b" 
-                        + options.branch_predictor+ "_l1d" + options.l1d_size + "_" +
-                        datetime.datetime.now().strftime("%Y-%m-%d-%Hh%Mm%Ss") )
+    the_dir = os.path.join(options.directory + "/br-" 
+                        + options.branch_predictor+ "_l1d-" + options.l1d_size + "_M-" + options.options.replace(" ", ",") + "_" +
+                        datetime.datetime.now().strftime("%m-%d-%Hh%Mm%Ss") )
     if not os.path.exists(the_dir):
         os.makedirs(the_dir)
     pid = os.fork()
@@ -186,7 +157,6 @@ def run_one_simulation(options, process):
     else:
         # in parent
         exited_pid, exit_status = os.waitpid(pid, 0)
-        print(exited_pid, exit_status)
         # Check whether child reached exit(0)
         if os.WIFEXITED(exit_status) and os.WEXITSTATUS(exit_status) != 0:
             eprint("Child did not exit normally")
@@ -200,9 +170,7 @@ def run_system_with_cpu(
         process, options, output_dir,
         warmup_cpu_class=None,
         warmup_instructions=0,
-        real_cpu_create_function=lambda cpu_id: DerivO3CPU(cpu_id=cpu_id),
-):
-    # Override the -d outdir --outdir option to gem5
+        real_cpu_create_function=lambda cpu_id: DerivO3CPU(cpu_id=cpu_id)):
     m5.options.outdir = output_dir
     m5.core.setOutputDir(m5.options.outdir)
 
