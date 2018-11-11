@@ -5,7 +5,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-rootdir = "output-example"
+rootdir = "output-example" # example son matrices de 4x4 
+#rootdir = "output" # estas son 100x100, 50x50, 50x100*100x20, 128x50*50x20.
 allowed_stats = ["sim_ticks", "system.cpu.ipc"]
 
 def getFolders(rootdir):

@@ -11,9 +11,10 @@ import Options
 
 def create_tests():
     tests = {}
-    tests["Cache_size"] = [16, 32, 64]#, 64, 128, 256, 512] #Kb
+    tests["Cache_size"] = [ 8, 16, 32, 64, 128, 256, 512 ,1024] #Kb
     tests["Predictor"] = ["local", "tourn", "bi"]
-    tests["Matrix_size"] = [{"I": 4, "J": 4 ,"K": 4}, {"I": 6, "J": 6 ,"K": 6}]
+    tests["Matrix_size"] = [{"I": 50, "J": 50 ,"K": 50}, {"I": 100, "J": 100 ,"K": 100},
+                            {"I": 50, "J": 100 ,"K": 20},{"I": 128, "J": 50 ,"K": 20}]
     tests["done"] = []
     return tests
 
