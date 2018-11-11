@@ -63,6 +63,11 @@ def run_all_simulations(options):
     # keep track of tests that were ran
     with open(options.test) as json_file:
         tests = json.load(json_file)
+    if(options.restart_test):
+        print("Restarted tests from zero!")
+        tests["done"] = []
+    if(tests["done"]):
+        print("Progress found!!!")
     total_tests = len(tests["Cache_size"]) * len(tests["Predictor"]) * len(tests["Matrix_size"])
     current  = 0
     for c in tests["Cache_size"]:

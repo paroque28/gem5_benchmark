@@ -30,6 +30,7 @@ def get_options(Options):
     parser.add_option("--directory", type="str", default=None)
     parser.add_option("--branch_predictor", type="str", default="local")
     parser.add_option("--test", type="str", default=None)  # options single vs all
+    parser.add_option("--restart_test", action="store_true")
 
     parser.set_defaults(
         # Default to writing to program.out in the current working directory
