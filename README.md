@@ -32,3 +32,8 @@ The included benchmarks are described bellow:
    [test-suite repository](https://github.com/llvm-mirror/test-suite),
    and the program was authored by Roberto Sierra.
 
+
+## Usage bulk test 
+```bash
+./gem5.opt gem5script.py --cmd=./blocked-matmul --directory=output --test=tests.json 
+```
