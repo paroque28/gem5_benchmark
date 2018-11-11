@@ -4,11 +4,25 @@ import configparser
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
-rootdir = "output-example" # example son matrices de 4x4 
-#rootdir = "output" # estas son 100x100, 50x50, 50x100*100x20, 128x50*50x20.
+ 
+rootdir = "output_final" # estas son 100x100, 50x50, 50x100*100x20, 128x50*50x20.
 allowed_stats = ["sim_ticks", "system.cpu.ipc"]
+MATRIX_BASELINE = [128, 50, 20]
+BP_BASELINE = 'TournamentBP'
+CACHE_SIZE_BASELINE = 8192
 
+def sort(x,y):
+    assert(len(x)==len(y))
+    data = {}
+    for i in range (len(x)):
+        data[x[i]]=y[i]
+    data = sorted(data.items())
+    x = []
+    y = []
+    for d in data:
+        x.append(d[0])
+        y.append(d[1])
+    return x , y
 def getFolders(rootdir):
     dirlist = []
     with os.scandir(rootdir) as rit:
@@ -17,6 +31,7 @@ def getFolders(rootdir):
                 dirlist.append(entry.path)
 
     dirlist.sort()
+    print("Total folders " , len(dirlist))
     return dirlist
 
     
@@ -49,7 +64,7 @@ def plotIPC(dataset, BP, I, J, K):
             x.append(int(data['CacheSize']))
             y.append(float(data['stats']['system.cpu.ipc']))
 
-
+    x , y = sort(x,y)
     x = np.array(x)
     y = np.array(y)
 
@@ -57,23 +72,24 @@ def plotIPC(dataset, BP, I, J, K):
     ax.plot(x, y)
 
     ax.set(xlabel='Cache Size (Kb)', ylabel='IPC',
-        title=("Comparacion IPC con tamanno cache matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+" "+ BP))
+        title=("IPC contra tamaño cache, matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+", "+ BP))
     ax.grid()
 
     fig.savefig("IPC.png")
     plt.show()
 
 def main():
-    dirlist = getFolders("output-example")
+    dirlist = getFolders(rootdir)
     dataset = []
 
     for folder in  dirlist:
         dataset.append(getTest(folder))
+    print("Total dataset len " , len(dataset))
 
-    for data in dataset:
-        print(data)
+    # Print all data
+    # for data in dataset:
+    #     print(data)
 
-    plotIPC(dataset, 'TournamentBP', 4, 4, 4) # tiene que existir el los folder
-
+    plotIPC(dataset, BP_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2]) # tiene que existir el los folder
 
 main()
