@@ -61,7 +61,7 @@ def plotIPC(dataset, BP, I, J, K):
     y = []
     for data in dataset:
         if (data['BP'] == BP and data['M_I'] == I and data['M_J'] == J and data['M_K'] == K):
-            x.append(int(data['CacheSize']))
+            x.append(int(data['CacheSize'])/1024)
             y.append(float(data['stats']['system.cpu.ipc']))
 
     x , y = sort(x,y)
