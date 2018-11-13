@@ -10,6 +10,7 @@ allowed_stats = ["sim_ticks", "system.cpu.ipc"]
 MATRIX_BASELINE = [128, 50, 20]
 BP_BASELINE = 'TournamentBP'
 CACHE_SIZE_BASELINE = 8192
+LOOP_UNROLLING_BASELINE = False
 
 def sort(x,y):
     assert(len(x)==len(y))
@@ -41,6 +42,10 @@ def getTest(folder):
 
     cmd=config['system.cpu.workload']['cmd']
     matrix_size = cmd.split(" ")
+    if re.match('.*/blocked-matmul .*', config['system.cpu.workload']['cmd']):
+        LU = True
+    else:
+        LU = False
 
     stats = {}
     filestat=open(folder + "/stats.txt","r")
@@ -51,16 +56,17 @@ def getTest(folder):
 
 
     return {'BP': config['system.cpu.branchPred']['type'],
+         'LU': LU,
          'CacheSize': config['system.cpu.dcache.tags']['size'],
          "M_I":int(matrix_size[1]), "M_J":int(matrix_size[2]), "M_K":int(matrix_size[3]),
          'stats': stats}
 
-def plotIPC(dataset, BP, I, J, K):
+def plotIPC(dataset, BP, LU, I, J, K):
     # Data for plotting
     x = []
     y = []
     for data in dataset:
-        if (data['BP'] == BP and data['M_I'] == I and data['M_J'] == J and data['M_K'] == K):
+        if (data['BP'] == BP and data['M_I'] == I and data['M_J'] == J and data['M_K'] == K and data["LU"] == LU):
             x.append(int(data['CacheSize'])/1024)
             y.append(float(data['stats']['system.cpu.ipc']))
 
@@ -86,10 +92,10 @@ def main():
         dataset.append(getTest(folder))
     print("Total dataset len " , len(dataset))
 
-    # Print all data
-    # for data in dataset:
-    #     print(data)
+    ##Print all data
+    for data in dataset:
+        print(data)
 
-    plotIPC(dataset, BP_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2]) # tiene que existir el los folder
+    #plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2]) # tiene que existir el los folder
 
 main()
