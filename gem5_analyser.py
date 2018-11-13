@@ -76,9 +76,9 @@ def plotIPC(dataset, BP, LU, I, J, K, file):
 
     fig, ax = plt.subplots()
     ax.plot(x, y)
-
+    loop = " with -funroll-loops" if LU else " no optimization"
     ax.set(xlabel='Cache Size (Kb)', ylabel='IPC',
-        title=("IPC contra tamaño cache, matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+", "+ BP))
+        title=("Matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+", "+ BP+ loop))
     ax.grid()
 
     fig.savefig(file)
