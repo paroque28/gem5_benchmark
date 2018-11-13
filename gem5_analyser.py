@@ -10,7 +10,7 @@ allowed_stats = ["sim_ticks", "system.cpu.ipc"]
 MATRIX_BASELINE = [128, 50, 20]
 BP_BASELINE = 'TournamentBP'
 CACHE_SIZE_BASELINE = 8192
-LOOP_UNROLLING_BASELINE = False
+LOOP_UNROLLING_BASELINE = True
 
 def sort(x,y):
     assert(len(x)==len(y))
@@ -61,7 +61,7 @@ def getTest(folder):
          "M_I":int(matrix_size[1]), "M_J":int(matrix_size[2]), "M_K":int(matrix_size[3]),
          'stats': stats}
 
-def plotIPC(dataset, BP, LU, I, J, K):
+def plotIPC(dataset, BP, LU, I, J, K, file):
     # Data for plotting
     x = []
     y = []
@@ -81,7 +81,7 @@ def plotIPC(dataset, BP, LU, I, J, K):
         title=("IPC contra tamaño cache, matriz "+str(I)+"x"+str(J)+" X "+str(J)+"x"+str(K)+", "+ BP))
     ax.grid()
 
-    fig.savefig("IPC.png")
+    fig.savefig(file)
     plt.show()
 
 def main():
@@ -93,9 +93,10 @@ def main():
     print("Total dataset len " , len(dataset))
 
     ##Print all data
-    for data in dataset:
-        print(data)
+    # for data in dataset:
+    #     print(data)
 
-    #plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2]) # tiene que existir el los folder
+    plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], "IPC_loop.png") # tiene que existir el los folder
+    plotIPC(dataset, BP_BASELINE, False, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], "IPC.png") # tiene que existir el los folder
 
 main()
