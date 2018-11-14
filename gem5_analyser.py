@@ -127,7 +127,7 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
                     label='LocalBP')
 
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
-    plt.xlabel('Cache Size')
+    plt.xlabel('Cache Size(Kb)')
     plt.ylabel('Success Rate Branch Predictor Percentage')
     plt.title('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+ loop)
     plt.xticks(index + bar_width, cachesizes)
@@ -170,7 +170,7 @@ def plotBranchMissMatrix(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
                     label='LocalBP')
 
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
-    plt.xlabel('Cache Size')
+    plt.xlabel('Matrix Size')
     plt.ylabel('Success Rate Branch Predictor Percentage')
     plt.title('Matriz '+ loop)
     plt.xticks(index + bar_width, matrixsizes)
