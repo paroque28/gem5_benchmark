@@ -26,6 +26,16 @@ def sort(x,y):
         x.append(d[0])
         y.append(d[1])
     return x , y
+# transforma un diccionario de diccionarios en un diccionario de listas
+def dictToList(dicti, dict_list):
+    labels= []
+    for key, data in dicti.items():
+        sortDic = sorted(data.items())
+        for ele in sortDic:
+            if (key == BP_BASELINE ):
+                labels.append(ele[0])
+            dict_list[key].append(ele[1])
+    return labels, dict_list
 def getFolders(rootdir):
     dirlist = []
     with os.scandir(rootdir) as rit:
@@ -87,7 +97,6 @@ def plotIPC(dataset, BP, LOOP_UNROLLING, I, J, K, file):
 
 def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
     # data to plot
-    n_groups = 8
     miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
     miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
     cachesizes = []
@@ -96,15 +105,10 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
         if (data['M_I'] == I and data['M_J'] == J and data['M_K'] == K and data['LOOP_UNROLLING'] == LOOP_UNROLLING):
             miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
             miss_rate[data['BP']][int(data['CacheSize'])/1024] = miss
-    for key, data in miss_rate.items():
-        sortDic = sorted(data.items())
-        for ele in sortDic:
-            if (key == BP_BASELINE ):
-                cachesizes.append(ele[0])
-            miss_rate_list[key].append(ele[1])
+    cachesizes, miss_rate_list = dictToList (miss_rate, miss_rate_list)
     # create plot
     fig, ax = plt.subplots()
-    index = np.arange(n_groups)
+    index = np.arange(len(cachesizes))
     bar_width = 0.3
     opacity = 0.8
     
@@ -132,6 +136,50 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
     plt.tight_layout()
     plt.savefig(file)
 
+
+def plotBranchMissMatrix(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
+    # data to plot
+    miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
+    miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
+    matrixsizes = []
+    #Populate Data
+    for data in dataset:
+        if (int(data['CacheSize']) == CACHE_SIZE and  data['LOOP_UNROLLING'] == LOOP_UNROLLING):
+            matrixsize = str(data['M_I'])+'x'+str(data['M_J'])+' X '+str(data['M_J'])+'x'+str(data['M_K'])
+            miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
+            miss_rate[data['BP']][matrixsize] = miss
+    matrixsizes, miss_rate_list = dictToList(miss_rate, miss_rate_list)
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(len(matrixsizes))
+    bar_width = 0.3
+    opacity = 0.8
+    
+    rects1 = plt.bar(index, miss_rate_list['TournamentBP'], bar_width,
+                    alpha=opacity,
+                    color='b',
+                    label='TournamentBP')
+    
+    rects2 = plt.bar(index + bar_width, miss_rate_list['BiModeBP'], bar_width,
+                    alpha=opacity,
+                    color='g',
+                    label='BiModeBP')
+    rects3 = plt.bar(index + bar_width*2, miss_rate_list['LocalBP'], bar_width,
+                    alpha=opacity,
+                    color='r',
+                    label='LocalBP')
+
+    loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    plt.xlabel('Cache Size')
+    plt.ylabel('Success Rate Branch Predictor Percentage')
+    plt.title('Matriz '+ loop)
+    plt.xticks(index + bar_width, matrixsizes)
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.savefig(file)
+
+
 def main():
     dirlist = getFolders(rootdir)
     dataset = []
@@ -144,7 +192,8 @@ def main():
     # for data in dataset:
     #     print(data)
 
-    # plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC_loop.png') # tiene que existir el los folder
-    # plotIPC(dataset, BP_BASELINE, False, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC.png') # tiene que existir el los folder
-    plotBranchMiss(dataset , True, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'MissBP_loop.png')
+    plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC_loop.png') # tiene que existir el los folder
+    plotIPC(dataset, BP_BASELINE, False, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC.png') # tiene que existir el los folder
+    plotBranchMiss(dataset , LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'MissBP_loop.png')
+    plotBranchMissMatrix(dataset, CACHE_SIZE_BASELINE, LOOP_UNROLLING_BASELINE,'MissBPMatrix_loop.png')
 main()
