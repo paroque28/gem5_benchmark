@@ -8,7 +8,8 @@ import numpy as np
 rootdir = 'output_final' # estas son 100x100, 50x50, 50x100*100x20, 128x50*50x20.
 allowed_stats = ['sim_ticks', 'system.cpu.ipc',
                     'system.cpu.branchPred.condPredicted', 
-                    'system.cpu.branchPred.condIncorrect']
+                    'system.cpu.branchPred.condIncorrect',
+                    'system.mem_ctrls.pageHitRate']
 MATRIX_BASELINE = [128, 50, 20]
 BP_BASELINE = 'TournamentBP'
 CACHE_SIZE_BASELINE = 8192
@@ -126,9 +127,9 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
                     color='r',
                     label='LocalBP')
 
-    loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
-    plt.xlabel('Cache Size(Kb)')
-    plt.ylabel('Success Rate Branch Predictor Percentage')
+    loop = ' con -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    plt.xlabel('Tamaño Caché (Kb)')
+    plt.ylabel('Porcentaje de Taza de Exito del Predictor de branches')
     plt.title('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+ loop)
     plt.xticks(index + bar_width, cachesizes)
     plt.legend()
@@ -170,15 +171,188 @@ def plotBranchMissMatrix(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
                     label='LocalBP')
 
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
-    plt.xlabel('Matrix Size')
-    plt.ylabel('Success Rate Branch Predictor Percentage')
-    plt.title('Matriz '+ 'With Caché = 8 Kb'+ ' and '+ loop)
+    plt.xlabel('Tamaño de Matriz')
+    plt.ylabel('Porcentaje de Taza de Exito del Predictor de branches')
+    plt.title('Matriz '+ 'Con Caché = 8 Kb'+ ' Y '+ loop)
     plt.xticks(index + bar_width, matrixsizes)
     plt.legend()
     
     plt.tight_layout()
     plt.savefig(file)
 
+def plotCacheHit(dataset, LOOP_UNROLLING, I, J, K, file):
+    # data to plot
+    miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
+    miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
+    cachesizes = []
+    #Populate Data
+    for data in dataset:
+        if (data['M_I'] == I and data['M_J'] == J and data['M_K'] == K and data['LOOP_UNROLLING'] == LOOP_UNROLLING):
+            #miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
+            miss = float(data['stats']['system.mem_ctrls.pageHitRate'])
+            miss_rate[data['BP']][float(data['CacheSize'])/1024] = miss
+    cachesizes, miss_rate_list = dictToList (miss_rate, miss_rate_list)
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(len(cachesizes))
+    bar_width = 0.3
+    opacity = 0.8
+    
+    rects1 = plt.bar(index, miss_rate_list['TournamentBP'], bar_width,
+                    alpha=opacity,
+                    color='b',
+                    label='TournamentBP')
+    
+    rects2 = plt.bar(index + bar_width, miss_rate_list['BiModeBP'], bar_width,
+                    alpha=opacity,
+                    color='g',
+                    label='BiModeBP')
+    rects3 = plt.bar(index + bar_width*2, miss_rate_list['LocalBP'], bar_width,
+                    alpha=opacity,
+                    color='r',
+                    label='LocalBP')
+    loop = ' con -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    #ax.set_yscale("log")
+    plt.xlabel('Tamaño Caché (Kb)')
+    plt.ylabel('Taza de Hit de Caché')
+    plt.title('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+ loop)
+    plt.xticks(index + bar_width, cachesizes)
+    plt.legend(loc = 'center')
+    #leg = plt.legend( loc = 'upper right')
+    plt.tight_layout()
+    plt.savefig(file)
+
+def plotCacheHit_log(dataset, LOOP_UNROLLING, I, J, K, file):
+    # data to plot
+    miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
+    miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
+    cachesizes = []
+    #Populate Data
+    for data in dataset:
+        if (data['M_I'] == I and data['M_J'] == J and data['M_K'] == K and data['LOOP_UNROLLING'] == LOOP_UNROLLING):
+            #miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
+            miss = float(data['stats']['system.mem_ctrls.pageHitRate'])
+            miss_rate[data['BP']][float(data['CacheSize'])/1024] = miss
+    cachesizes, miss_rate_list = dictToList (miss_rate, miss_rate_list)
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(len(cachesizes))
+    bar_width = 0.3
+    opacity = 0.8
+    
+    rects1 = plt.bar(index, miss_rate_list['TournamentBP'], bar_width,
+                    alpha=opacity,
+                    color='b',
+                    label='TournamentBP')
+    
+    rects2 = plt.bar(index + bar_width, miss_rate_list['BiModeBP'], bar_width,
+                    alpha=opacity,
+                    color='g',
+                    label='BiModeBP')
+    rects3 = plt.bar(index + bar_width*2, miss_rate_list['LocalBP'], bar_width,
+                    alpha=opacity,
+                    color='r',
+                    label='LocalBP')
+    loop = ' con -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    ax.set_yscale("log")
+    plt.xlabel('Tamaño Caché (Kb)')
+    plt.ylabel('Logaritmo de Taza de Hit de Caché')
+    plt.title('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+ loop)
+    plt.xticks(index + bar_width, cachesizes)
+    plt.legend()
+    #leg = plt.legend( loc = 'upper right')
+    plt.tight_layout()
+    plt.savefig(file)
+
+def plotCacheHitMatrix_log(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
+    # data to plot
+    miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
+    miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
+    matrixsizes = []
+    #Populate Data
+    for data in dataset:
+        if (int(data['CacheSize']) == CACHE_SIZE and  data['LOOP_UNROLLING'] == LOOP_UNROLLING):
+            matrixsize = str(data['M_I'])+'x'+str(data['M_J'])+'*'+str(data['M_J'])+'x'+str(data['M_K'])
+            miss = float(data['stats']['system.mem_ctrls.pageHitRate'])
+            #miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
+            miss_rate[data['BP']][matrixsize] = miss
+    matrixsizes, miss_rate_list = dictToList(miss_rate, miss_rate_list)
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(len(matrixsizes))
+    ##leg = plt.legend( loc = 'lower right')
+    bar_width = 0.3
+    opacity = 0.8
+    
+    rects1 = plt.bar(index, miss_rate_list['TournamentBP'], bar_width,
+                    alpha=opacity,
+                    color='b',
+                    label='TournamentBP')
+    
+    rects2 = plt.bar(index + bar_width, miss_rate_list['BiModeBP'], bar_width,
+                    alpha=opacity,
+                    color='g',
+                    label='BiModeBP')
+    rects3 = plt.bar(index + bar_width*2, miss_rate_list['LocalBP'], bar_width,
+                    alpha=opacity,
+                    color='r',
+                    label='LocalBP')
+
+    loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    ax.set_yscale("log")
+    plt.xlabel('Tamaño de Matriz')
+    plt.ylabel('Logaritmo de Taza de Hit de Caché')
+    plt.title('Matriz '+ 'Con Caché = 8 Kb'+ ' Y '+ loop)
+    plt.xticks(index + bar_width, matrixsizes)
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.savefig(file)
+
+def plotCacheHitMatrix(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
+    # data to plot
+    miss_rate = {'LocalBP':{},'BiModeBP':{},'TournamentBP':{}}
+    miss_rate_list = {'LocalBP':[],'BiModeBP':[],'TournamentBP':[]}
+    matrixsizes = []
+    #Populate Data
+    for data in dataset:
+        if (int(data['CacheSize']) == CACHE_SIZE and  data['LOOP_UNROLLING'] == LOOP_UNROLLING):
+            matrixsize = str(data['M_I'])+'x'+str(data['M_J'])+'*'+str(data['M_J'])+'x'+str(data['M_K'])
+            miss = float(data['stats']['system.mem_ctrls.pageHitRate'])
+            #miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
+            miss_rate[data['BP']][matrixsize] = miss
+    matrixsizes, miss_rate_list = dictToList(miss_rate, miss_rate_list)
+    # create plot
+    fig, ax = plt.subplots()
+    index = np.arange(len(matrixsizes))
+    ##leg = plt.legend( loc = 'lower right')
+    bar_width = 0.3
+    opacity = 0.8
+    
+    rects1 = plt.bar(index, miss_rate_list['TournamentBP'], bar_width,
+                    alpha=opacity,
+                    color='b',
+                    label='TournamentBP')
+    
+    rects2 = plt.bar(index + bar_width, miss_rate_list['BiModeBP'], bar_width,
+                    alpha=opacity,
+                    color='g',
+                    label='BiModeBP')
+    rects3 = plt.bar(index + bar_width*2, miss_rate_list['LocalBP'], bar_width,
+                    alpha=opacity,
+                    color='r',
+                    label='LocalBP')
+
+    loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
+    #ax.set_yscale("log")
+    plt.xlabel('Tamaño de Matriz')
+    plt.ylabel('Taza de Hit de Caché')
+    plt.title('Matriz '+ 'Con Caché = 8 Kb'+ ' Y '+ loop)
+    plt.xticks(index + bar_width, matrixsizes)
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.savefig(file)
 
 def main():
     dirlist = getFolders(rootdir)
@@ -191,12 +365,19 @@ def main():
     ##Print all data
     # for data in dataset:
     #     print(data)
-
+    
+    #IPC measurement
     plotIPC(dataset, BP_BASELINE, LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC_loop.png') # tiene que existir el los folder
     plotIPC(dataset, BP_BASELINE, False, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'IPC.png') # tiene que existir el los folder
+    #BranchMiss measurement
     plotBranchMiss(dataset , LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'MissBP_loop.png')
     plotBranchMissMatrix(dataset, CACHE_SIZE_BASELINE, LOOP_UNROLLING_BASELINE,'MissBPMatrix_loop.png')
+    #Caché Hit Measurement
+    #-Related to Caché Size
+    plotCacheHit(dataset , LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'CacheHitBP_loop.png')
+    plotCacheHit_log(dataset , LOOP_UNROLLING_BASELINE, MATRIX_BASELINE[0], MATRIX_BASELINE[1], MATRIX_BASELINE[2], 'CacheHitBP_log_loop.png')
+    #-Realted to Matrix Size
+    plotCacheHitMatrix(dataset, CACHE_SIZE_BASELINE, LOOP_UNROLLING_BASELINE,'CacheHitBPMatrix_loop.png')
+    plotCacheHitMatrix_log(dataset, CACHE_SIZE_BASELINE, LOOP_UNROLLING_BASELINE,'CacheHitBPMatrix_loop_log.png')
+    
 main()
-
-
-#system.mem_ctrls.pageHitRate
