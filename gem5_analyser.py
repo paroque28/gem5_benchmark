@@ -90,7 +90,7 @@ def plotIPC(dataset, BP, LOOP_UNROLLING, I, J, K, file):
     ax.plot(x, y)
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
     ax.set(xlabel='Cache Size (Kb)', ylabel='IPC',
-        title=('Matriz '+str(I)+'x'+str(J)+' X '+str(J)+'x'+str(K)+', '+ BP+ loop))
+        title=('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+', '+ BP+ loop))
     ax.grid()
 
     fig.savefig(file)
@@ -129,7 +129,7 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
     plt.xlabel('Cache Size')
     plt.ylabel('Success Rate Branch Predictor Percentage')
-    plt.title('Matriz '+str(I)+'x'+str(J)+' X '+str(J)+'x'+str(K)+ loop)
+    plt.title('Matriz '+str(I)+'x'+str(J)+'*'+str(J)+'x'+str(K)+ loop)
     plt.xticks(index + bar_width, cachesizes)
     plt.legend()
     
@@ -145,7 +145,7 @@ def plotBranchMissMatrix(dataset, CACHE_SIZE, LOOP_UNROLLING, file):
     #Populate Data
     for data in dataset:
         if (int(data['CacheSize']) == CACHE_SIZE and  data['LOOP_UNROLLING'] == LOOP_UNROLLING):
-            matrixsize = str(data['M_I'])+'x'+str(data['M_J'])+' X '+str(data['M_J'])+'x'+str(data['M_K'])
+            matrixsize = str(data['M_I'])+'x'+str(data['M_J'])+'*'+str(data['M_J'])+'x'+str(data['M_K'])
             miss = int(data['stats']['system.cpu.branchPred.condPredicted'])/int(data['stats']['system.cpu.branchPred.condIncorrect']) * 100
             miss_rate[data['BP']][matrixsize] = miss
     matrixsizes, miss_rate_list = dictToList(miss_rate, miss_rate_list)
