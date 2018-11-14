@@ -84,7 +84,6 @@ def plotIPC(dataset, BP, LOOP_UNROLLING, I, J, K, file):
     ax.grid()
 
     fig.savefig(file)
-    plt.show()
 
 def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
     # data to plot
@@ -125,14 +124,13 @@ def plotBranchMiss(dataset, LOOP_UNROLLING, I, J, K, file):
 
     loop = ' with -funroll-loops' if LOOP_UNROLLING else ' no optimization'
     plt.xlabel('Cache Size')
-    plt.ylabel('Miss Rate Branch Predictor Percentage')
+    plt.ylabel('Success Rate Branch Predictor Percentage')
     plt.title('Matriz '+str(I)+'x'+str(J)+' X '+str(J)+'x'+str(K)+ loop)
     plt.xticks(index + bar_width, cachesizes)
     plt.legend()
     
     plt.tight_layout()
     plt.savefig(file)
-    plt.show()
 
 def main():
     dirlist = getFolders(rootdir)
